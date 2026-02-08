@@ -4,9 +4,11 @@
 
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-// In Vercel serverless, __dirname points to the function's directory.
+// In ESM, __dirname is not available. Reconstruct it from import.meta.url.
 // Template files are included via vercel.json includeFiles config.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TEMPLATES_DIR = path.join(__dirname, '..', 'src', 'templates', 'channel');
 
 function readTemplateFile(relativePath: string): string {
