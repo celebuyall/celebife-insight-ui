@@ -92,6 +92,9 @@ export const TEMPLATE_TSCONFIG = JSON.stringify({
   include: ['src'],
 }, null, 2);
 
+export const TEMPLATE_VITE_ENV = `/// <reference types="vite/client" />
+`;
+
 export const TEMPLATE_MAIN_TSX = `import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
