@@ -91,7 +91,8 @@ export default async function handler(
 
     const teamId = process.env.VERCEL_TEAM_ID;
     const sanitizedHandle = sanitizeHandle(meta.handle);
-    const projectName = `haarpeer-${sanitizedHandle}`;
+    const brandPrefix = brand === 'food' ? 'celebfood' : 'celebeauty';
+    const projectName = `${brandPrefix}-${sanitizedHandle}`;
 
     // Read complex template files from source with brand-specific values
     const appTsx = getTemplateAppTsx(brandConfig.logo);
