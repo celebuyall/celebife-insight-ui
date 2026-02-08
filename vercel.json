@@ -1,0 +1,11 @@
+{
+  "functions": {
+    "api/extract.ts": {
+      "maxDuration": 180
+    },
+    "api/deploy.ts": {
+      "includeFiles": "src/templates/channel/**",
+      "maxDuration": 30
+    }
+  }
+}
