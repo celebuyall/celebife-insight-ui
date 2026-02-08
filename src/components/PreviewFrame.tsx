@@ -169,6 +169,9 @@ export default function PreviewFrame({ dataTs, isLoading = false }: PreviewFrame
         {/* Tab Navigation */}
         <div className="bg-white border-b border-slate-200 px-4 py-3">
           <div className="flex items-center justify-between">
+            <span className="font-logo text-2xl font-normal tracking-tight text-brand cursor-pointer select-none">
+              Celebeauty
+            </span>
             <div className="flex bg-slate-100 p-1 rounded-lg">
               <button
                 onClick={() => setActiveTab(TabView.FANDOM)}

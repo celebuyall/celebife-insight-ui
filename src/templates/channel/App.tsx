@@ -16,6 +16,8 @@ const App: React.FC = () => {
     setCurrentDate(formatted);
   }, []);
 
+  const lastUpdated = dashboardData.meta.lastUpdated || currentDate;
+
   return (
     <div className="min-h-screen bg-[#F3F5F9] text-slate-800 pb-20">
       {/* Navigation Header */}
@@ -63,7 +65,7 @@ const App: React.FC = () => {
                 <p className="uppercase tracking-wider">Last Updated</p>
                 <div className="flex items-center justify-end gap-1 text-slate-600">
                   <Calendar size={12} />
-                  <span>{currentDate}</span>
+                  <span>{lastUpdated}</span>
                 </div>
               </div>
             </div>
