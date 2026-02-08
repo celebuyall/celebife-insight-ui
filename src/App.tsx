@@ -7,12 +7,14 @@ import DeployButton from './components/DeployButton';
 import PreviewFrame from './components/PreviewFrame';
 import { extractChannelData } from './lib/api';
 import type { ProfileMeta } from './lib/types';
+import { BRANDS, type BrandType } from './lib/brands';
 
 type Tab = 'input' | 'preview' | 'deploy';
 type LoadingStep = 1 | 2 | 3;
 
 function App() {
   // Input state
+  const [brand, setBrand] = useState<BrandType>('beauty');
   const [reportA, setReportA] = useState('');
   const [reportB, setReportB] = useState('');
   const [meta, setMeta] = useState<ProfileMeta>({
@@ -73,6 +75,7 @@ function App() {
   };
 
   const handleReset = () => {
+    setBrand('beauty');
     setReportA('');
     setReportB('');
     setMeta({
@@ -128,9 +131,10 @@ function App() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === tab.id
-                    ? 'border-purple-600 text-purple-600'
+                    ? 'border-current'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
+                style={activeTab === tab.id ? { color: BRANDS[brand].brandColor } : undefined}
               >
                 {tab.label}
                 {tab.id === 'preview' && dataTs && (
@@ -171,6 +175,35 @@ function App() {
             {/* Input Tab */}
             {activeTab === 'input' && (
               <div className="space-y-8 animate-fade-in">
+                {/* Brand Selection */}
+                <section>
+                  <h2 className="text-lg font-semibold text-gray-800 mb-4">
+                    브랜드 선택
+                  </h2>
+                  <div className="flex gap-3">
+                    {(Object.keys(BRANDS) as BrandType[]).map((key) => {
+                      const cfg = BRANDS[key];
+                      const isActive = brand === key;
+                      return (
+                        <button
+                          key={key}
+                          onClick={() => setBrand(key)}
+                          className={`
+                            px-5 py-3 rounded-lg font-semibold text-sm transition-all border-2
+                            ${isActive
+                              ? 'text-white shadow-lg'
+                              : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                            }
+                          `}
+                          style={isActive ? { backgroundColor: cfg.brandColor, borderColor: cfg.brandColor } : undefined}
+                        >
+                          {cfg.logo}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+
                 {/* Report Input */}
                 <section>
                   <h2 className="text-lg font-semibold text-gray-800 mb-4">
@@ -199,10 +232,11 @@ function App() {
                       font-semibold text-lg transition-all
                       ${
                         canGenerate
-                          ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg hover:shadow-xl'
+                          ? 'text-white shadow-lg hover:shadow-xl hover:brightness-110'
                           : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       }
                     `}
+                    style={canGenerate ? { backgroundColor: BRANDS[brand].brandColor } : undefined}
                   >
                     <Sparkles className="w-5 h-5" />
                     AI로 채널 생성
@@ -219,14 +253,14 @@ function App() {
             {/* Preview Tab */}
             {activeTab === 'preview' && (
               <div className="animate-fade-in">
-                <PreviewFrame dataTs={dataTs} isLoading={isLoading} />
+                <PreviewFrame dataTs={dataTs} isLoading={isLoading} brand={brand} />
               </div>
             )}
 
             {/* Deploy Tab */}
             {activeTab === 'deploy' && (
               <div className="max-w-lg animate-fade-in">
-                <DeployButton dataTs={dataTs} meta={meta} />
+                <DeployButton dataTs={dataTs} meta={meta} brand={brand} />
               </div>
             )}
           </>

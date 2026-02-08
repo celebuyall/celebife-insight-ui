@@ -185,7 +185,7 @@ const renderTextWithBold = (text: string) =>
     )
   );
 
-const FandomDashboard: React.FC<{ data: FandomData }> = ({ data }) => {
+const FandomDashboard: React.FC<{ data: FandomData; chartColors?: [string, string] }> = ({ data, chartColors }) => {
   const section1Ref = useRef<HTMLElement>(null);
   const section2Ref = useRef<HTMLElement>(null);
   const section3Ref = useRef<HTMLElement>(null);
@@ -211,7 +211,7 @@ const FandomDashboard: React.FC<{ data: FandomData }> = ({ data }) => {
   ];
 
   const audienceData = data.kpi.audienceFit.distribution;
-  const COLORS = ['#7d4fde', '#e8e0fb'];
+  const COLORS = chartColors || ['#7d4fde', '#e8e0fb'];
   const displayName = data.profile.displayName;
   const nameSizeClass = displayName.length > 14 ? 'text-xl md:text-2xl' : 'text-2xl md:text-3xl';
   const commerceDNAOrder = ['Identity', 'Action', 'Trigger'];

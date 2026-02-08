@@ -5,6 +5,7 @@ import ContentDashboard from '../templates/channel/components/ContentDashboard';
 import { TabView } from '../templates/channel/types';
 import type { DashboardData } from '../templates/channel/types';
 import { dashboardData as sampleData } from '../templates/channel/data';
+import { BRANDS, type BrandType } from '../lib/brands';
 
 // Deep merge: AI data + sample defaults for missing fields
 function deepMergeDefaults(defaults: any, source: any): any {
@@ -89,6 +90,7 @@ class DashboardErrorBoundary extends Component<
 interface PreviewFrameProps {
   dataTs: string | null;
   isLoading?: boolean;
+  brand?: BrandType;
 }
 
 function parseDashboardData(dataTs: string): DashboardData | null {
@@ -111,8 +113,9 @@ function parseDashboardData(dataTs: string): DashboardData | null {
   }
 }
 
-export default function PreviewFrame({ dataTs, isLoading = false }: PreviewFrameProps) {
+export default function PreviewFrame({ dataTs, isLoading = false, brand = 'beauty' }: PreviewFrameProps) {
   const [activeTab, setActiveTab] = useState<TabView>(TabView.FANDOM);
+  const brandConfig = BRANDS[brand];
 
   const dashboardData = useMemo(() => {
     if (!dataTs) return null;
@@ -122,7 +125,7 @@ export default function PreviewFrame({ dataTs, isLoading = false }: PreviewFrame
   if (isLoading) {
     return (
       <div className="bg-white rounded-lg border-2 border-gray-200 p-8 flex flex-col items-center justify-center min-h-[400px]">
-        <Loader2 className="w-12 h-12 text-purple-600 animate-spin mb-4" />
+        <Loader2 className="w-12 h-12 animate-spin mb-4" style={{ color: brandConfig.brandColor }} />
         <p className="text-gray-600 font-medium">채널 데이터 생성 중...</p>
       </div>
     );
@@ -165,21 +168,25 @@ export default function PreviewFrame({ dataTs, isLoading = false }: PreviewFrame
 
   return (
     <DashboardErrorBoundary dataTs={dataTs}>
-      <div className="bg-[#F3F5F9] rounded-lg border-2 border-purple-200 overflow-hidden">
+      <div
+        className="bg-[#F3F5F9] rounded-lg border-2 overflow-hidden"
+        style={{ borderColor: `${brandConfig.brandColor}33`, '--color-brand': brandConfig.brandColor } as React.CSSProperties}
+      >
         {/* Tab Navigation */}
         <div className="bg-white border-b border-slate-200 px-4 py-3">
           <div className="flex items-center justify-between">
-            <span className="font-logo text-2xl font-normal tracking-tight text-brand cursor-pointer select-none">
-              Celebeauty
+            <span className="font-logo text-2xl font-normal tracking-tight cursor-pointer select-none" style={{ color: brandConfig.brandColor }}>
+              {brandConfig.logo}
             </span>
             <div className="flex bg-slate-100 p-1 rounded-lg">
               <button
                 onClick={() => setActiveTab(TabView.FANDOM)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                   activeTab === TabView.FANDOM
-                    ? 'bg-white text-purple-600 shadow-sm'
+                    ? 'bg-white shadow-sm'
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
+                style={activeTab === TabView.FANDOM ? { color: brandConfig.brandColor } : undefined}
               >
                 <Users size={16} />
                 팬덤 지표 분석
@@ -188,9 +195,10 @@ export default function PreviewFrame({ dataTs, isLoading = false }: PreviewFrame
                 onClick={() => setActiveTab(TabView.CONTENT)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                   activeTab === TabView.CONTENT
-                    ? 'bg-white text-purple-600 shadow-sm'
+                    ? 'bg-white shadow-sm'
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
+                style={activeTab === TabView.CONTENT ? { color: brandConfig.brandColor } : undefined}
               >
                 <FileText size={16} />
                 채널 핵심 콘텐츠 분석
@@ -203,7 +211,7 @@ export default function PreviewFrame({ dataTs, isLoading = false }: PreviewFrame
         {/* Dashboard Content */}
         <div className="p-4">
           {activeTab === TabView.FANDOM
-            ? <FandomDashboard data={dashboardData.fandom} />
+            ? <FandomDashboard data={dashboardData.fandom} chartColors={brandConfig.chartColors} />
             : <ContentDashboard data={dashboardData.content} />
           }
         </div>

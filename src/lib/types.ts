@@ -19,6 +19,7 @@ export interface ExtractResponse {
 export interface DeployRequest {
   dataTs: string;
   meta: ProfileMeta;
+  brand: import('./brands').BrandType;
 }
 
 export interface DeployResponse {

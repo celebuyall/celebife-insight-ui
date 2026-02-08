@@ -1,12 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { ProfileMeta } from '../src/lib/types';
+import { BRANDS, type BrandType } from '../src/lib/brands';
 import {
-  TEMPLATE_INDEX_HTML,
   TEMPLATE_PACKAGE_JSON,
   TEMPLATE_VITE_CONFIG,
   TEMPLATE_TSCONFIG,
   TEMPLATE_MAIN_TSX,
-  TEMPLATE_INDEX_CSS,
+  getTemplateIndexHTML,
+  getTemplateIndexCSS,
   getTemplateAppTsx,
   getTemplateTypesTsx,
   getTemplateFandomDashboard,
@@ -16,6 +17,7 @@ import {
 interface DeployRequestBody {
   dataTs: string;
   meta: ProfileMeta;
+  brand?: BrandType;
 }
 
 interface VercelFile {
@@ -57,7 +59,7 @@ export default async function handler(
   }
 
   try {
-    const { dataTs, meta } = req.body as DeployRequestBody;
+    const { dataTs, meta, brand: brandKey } = req.body as DeployRequestBody;
 
     // Validate input
     if (!dataTs || !meta) {
@@ -74,6 +76,10 @@ export default async function handler(
       });
     }
 
+    // Resolve brand config (default to beauty for backwards compatibility)
+    const brand: BrandType = brandKey && BRANDS[brandKey] ? brandKey : 'beauty';
+    const brandConfig = BRANDS[brand];
+
     // Check deploy token
     const deployToken = process.env.VERCEL_DEPLOY_TOKEN;
     if (!deployToken) {
@@ -87,20 +93,20 @@ export default async function handler(
     const sanitizedHandle = sanitizeHandle(meta.handle);
     const projectName = `haarpeer-${sanitizedHandle}`;
 
-    // Read complex template files from source
-    const appTsx = getTemplateAppTsx();
+    // Read complex template files from source with brand-specific values
+    const appTsx = getTemplateAppTsx(brandConfig.logo);
     const typesTsx = getTemplateTypesTsx();
-    const fandomDashboard = getTemplateFandomDashboard();
+    const fandomDashboard = getTemplateFandomDashboard(brandConfig.chartColors);
     const contentDashboard = getTemplateContentDashboard();
 
     // Build the file array for Vercel deployment
     const files: VercelFile[] = [
-      { file: 'index.html', data: TEMPLATE_INDEX_HTML },
+      { file: 'index.html', data: getTemplateIndexHTML(brandConfig.title) },
       { file: 'package.json', data: TEMPLATE_PACKAGE_JSON },
       { file: 'vite.config.ts', data: TEMPLATE_VITE_CONFIG },
       { file: 'tsconfig.json', data: TEMPLATE_TSCONFIG },
       { file: 'src/main.tsx', data: TEMPLATE_MAIN_TSX },
-      { file: 'src/index.css', data: TEMPLATE_INDEX_CSS },
+      { file: 'src/index.css', data: getTemplateIndexCSS(brandConfig.brandColor) },
       { file: 'src/App.tsx', data: appTsx },
       { file: 'src/types.ts', data: typesTsx },
       { file: 'src/data.ts', data: dataTs },

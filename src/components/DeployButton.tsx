@@ -2,16 +2,18 @@ import { useState } from 'react';
 import { Copy, Check, FileCode, Rocket, Loader2, ExternalLink, AlertCircle } from 'lucide-react';
 import { deployChannelDashboard } from '../lib/api';
 import type { ProfileMeta } from '../lib/types';
+import { BRANDS, type BrandType } from '../lib/brands';
 
 type DeployStatus = 'idle' | 'deploying' | 'success' | 'error';
 
 interface DeployButtonProps {
   dataTs: string | null;
   meta: ProfileMeta;
+  brand: BrandType;
   disabled?: boolean;
 }
 
-export default function DeployButton({ dataTs, meta, disabled = false }: DeployButtonProps) {
+export default function DeployButton({ dataTs, meta, brand, disabled = false }: DeployButtonProps) {
   const [copied, setCopied] = useState(false);
   const [deployStatus, setDeployStatus] = useState<DeployStatus>('idle');
   const [deploymentUrl, setDeploymentUrl] = useState<string | null>(null);
@@ -37,7 +39,7 @@ export default function DeployButton({ dataTs, meta, disabled = false }: DeployB
     setDeploymentUrl(null);
 
     try {
-      const response = await deployChannelDashboard({ dataTs, meta });
+      const response = await deployChannelDashboard({ dataTs, meta, brand });
 
       if (!response.success || !response.deploymentUrl) {
         throw new Error(response.error || '배포에 실패했습니다.');
@@ -68,9 +70,14 @@ export default function DeployButton({ dataTs, meta, disabled = false }: DeployB
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
               : deployStatus === 'success'
               ? 'bg-green-600 text-white hover:bg-green-700'
-              : 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg hover:shadow-xl'
+              : 'text-white shadow-lg hover:shadow-xl hover:brightness-110'
           }
         `}
+        style={
+          !(isDisabled || deployStatus === 'deploying') && deployStatus !== 'success'
+            ? { backgroundColor: BRANDS[brand].brandColor }
+            : undefined
+        }
       >
         {deployStatus === 'deploying' ? (
           <>

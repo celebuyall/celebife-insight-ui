@@ -29,6 +29,10 @@ export const TEMPLATE_INDEX_HTML = `<!doctype html>
   </body>
 </html>`;
 
+export function getTemplateIndexHTML(title: string): string {
+  return TEMPLATE_INDEX_HTML.replace('Haarpeer Channel Dashboard', title);
+}
+
 export const TEMPLATE_PACKAGE_JSON = JSON.stringify({
   name: 'haarpeer-dashboard',
   private: true,
@@ -135,19 +139,27 @@ body {
   animation: fade-in 0.3s ease-out;
 }`;
 
+export function getTemplateIndexCSS(brandColor: string): string {
+  return TEMPLATE_INDEX_CSS.replace('--color-brand: #8b5cf6;', `--color-brand: ${brandColor};`);
+}
+
 // Complex component files read from source at runtime.
 // These contain template literals and JSX that would be error-prone to inline.
 // Vercel bundles these via includeFiles in vercel.json.
-export function getTemplateAppTsx(): string {
-  return readTemplateFile('App.tsx');
+export function getTemplateAppTsx(logoName: string): string {
+  const content = readTemplateFile('App.tsx');
+  return content.replace(/Celebeauty/g, logoName);
 }
 
 export function getTemplateTypesTsx(): string {
   return readTemplateFile('types.ts');
 }
 
-export function getTemplateFandomDashboard(): string {
-  return readTemplateFile('components/FandomDashboard.tsx');
+export function getTemplateFandomDashboard(chartColors: [string, string]): string {
+  const content = readTemplateFile('components/FandomDashboard.tsx');
+  return content
+    .replace("'#7d4fde'", `'${chartColors[0]}'`)
+    .replace("'#e8e0fb'", `'${chartColors[1]}'`);
 }
 
 export function getTemplateContentDashboard(): string {
