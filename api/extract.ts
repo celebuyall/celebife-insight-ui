@@ -88,10 +88,11 @@ export default async function handler(
     const result = await model.generateContent(userPrompt);
     const responseText = result.response.text();
 
-    // Parse and validate JSON
+    // Parse and validate JSON (strip markdown code fences if present)
     let dashboardData: unknown;
     try {
-      dashboardData = JSON.parse(responseText);
+      const cleanedText = responseText.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+      dashboardData = JSON.parse(cleanedText);
     } catch {
       return res.status(500).json({
         success: false,
