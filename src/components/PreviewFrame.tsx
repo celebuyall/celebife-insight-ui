@@ -1,5 +1,5 @@
-import React, { useState, useMemo, Component } from 'react';
-import { Users, FileText, AlertCircle, Loader2 } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useRef, Component } from 'react';
+import { Users, FileText, AlertCircle, Loader2, Code, Eye } from 'lucide-react';
 import FandomDashboard from '../templates/channel/components/FandomDashboard';
 import ContentDashboard from '../templates/channel/components/ContentDashboard';
 import { TabView } from '../templates/channel/types';
@@ -60,6 +60,12 @@ class DashboardErrorBoundary extends Component<
     return { hasError: true, error };
   }
 
+  componentDidUpdate(prevProps: { children: React.ReactNode; dataTs: string }) {
+    if (prevProps.dataTs !== this.props.dataTs && this.state.hasError) {
+      this.setState({ hasError: false, error: null });
+    }
+  }
+
   render() {
     if (this.state.hasError) {
       return (
@@ -91,6 +97,7 @@ interface PreviewFrameProps {
   dataTs: string | null;
   isLoading?: boolean;
   brand?: BrandType;
+  onDataTsChange?: (dataTs: string) => void;
 }
 
 function parseDashboardData(dataTs: string): DashboardData | null {
@@ -113,13 +120,27 @@ function parseDashboardData(dataTs: string): DashboardData | null {
   }
 }
 
-export default function PreviewFrame({ dataTs, isLoading = false, brand = 'beauty' }: PreviewFrameProps) {
+type PreviewMode = 'preview' | 'editor';
+
+export default function PreviewFrame({ dataTs, isLoading = false, brand = 'beauty', onDataTsChange }: PreviewFrameProps) {
   const [activeTab, setActiveTab] = useState<TabView>(TabView.FANDOM);
+  const [mode, setMode] = useState<PreviewMode>('preview');
+  const [editBuffer, setEditBuffer] = useState<string>('');
+  const [parseError, setParseError] = useState<string | null>(null);
+  const isLocalEdit = useRef(false);
   const brandConfig = BRANDS[brand];
 
   const dashboardData = useMemo(() => {
     if (!dataTs) return null;
     return parseDashboardData(dataTs);
+  }, [dataTs]);
+
+  useEffect(() => {
+    if (dataTs && !isLocalEdit.current) {
+      setEditBuffer(dataTs);
+      setParseError(null);
+    }
+    isLocalEdit.current = false;
   }, [dataTs]);
 
   if (isLoading) {
@@ -178,43 +199,110 @@ export default function PreviewFrame({ dataTs, isLoading = false, brand = 'beaut
             <span className="font-logo text-2xl font-normal tracking-tight cursor-pointer select-none" style={{ color: brandConfig.brandColor }}>
               {brandConfig.logo}
             </span>
+            {mode === 'preview' && (
+              <div className="flex bg-slate-100 p-1 rounded-lg">
+                <button
+                  onClick={() => setActiveTab(TabView.FANDOM)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                    activeTab === TabView.FANDOM
+                      ? 'bg-white shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                  style={activeTab === TabView.FANDOM ? { color: brandConfig.brandColor } : undefined}
+                >
+                  <Users size={16} />
+                  팬덤 지표 분석
+                </button>
+                <button
+                  onClick={() => setActiveTab(TabView.CONTENT)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                    activeTab === TabView.CONTENT
+                      ? 'bg-white shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                  style={activeTab === TabView.CONTENT ? { color: brandConfig.brandColor } : undefined}
+                >
+                  <FileText size={16} />
+                  채널 핵심 콘텐츠 분석
+                </button>
+              </div>
+            )}
             <div className="flex bg-slate-100 p-1 rounded-lg">
               <button
-                onClick={() => setActiveTab(TabView.FANDOM)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                  activeTab === TabView.FANDOM
-                    ? 'bg-white shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
+                onClick={() => setMode('preview')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
+                  mode === 'preview'
+                    ? 'bg-white shadow-sm text-slate-700'
+                    : 'text-slate-400 hover:text-slate-600'
                 }`}
-                style={activeTab === TabView.FANDOM ? { color: brandConfig.brandColor } : undefined}
               >
-                <Users size={16} />
-                팬덤 지표 분석
+                <Eye size={14} />
+                미리보기
               </button>
               <button
-                onClick={() => setActiveTab(TabView.CONTENT)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                  activeTab === TabView.CONTENT
-                    ? 'bg-white shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
+                onClick={() => {
+                  setMode('editor');
+                  if (dataTs && !editBuffer) setEditBuffer(dataTs);
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
+                  mode === 'editor'
+                    ? 'bg-white shadow-sm text-slate-700'
+                    : 'text-slate-400 hover:text-slate-600'
                 }`}
-                style={activeTab === TabView.CONTENT ? { color: brandConfig.brandColor } : undefined}
               >
-                <FileText size={16} />
-                채널 핵심 콘텐츠 분석
+                <Code size={14} />
+                코드편집
               </button>
             </div>
-            <span className="text-xs text-gray-400">미리보기</span>
           </div>
         </div>
 
-        {/* Dashboard Content */}
-        <div className="p-4">
-          {activeTab === TabView.FANDOM
-            ? <FandomDashboard data={dashboardData.fandom} chartColors={brandConfig.chartColors} />
-            : <ContentDashboard data={dashboardData.content} />
-          }
-        </div>
+        {/* Dashboard Content / Editor */}
+        {mode === 'preview' ? (
+          <div className="p-4">
+            {activeTab === TabView.FANDOM
+              ? <FandomDashboard data={dashboardData.fandom} chartColors={brandConfig.chartColors} />
+              : <ContentDashboard data={dashboardData.content} />
+            }
+          </div>
+        ) : (
+          <div className="p-4">
+            {parseError && (
+              <div className="mb-3 px-4 py-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm font-medium text-red-700">파싱 오류</p>
+                <p className="text-xs text-red-500 mt-1">{parseError}</p>
+              </div>
+            )}
+            <textarea
+              value={editBuffer}
+              onChange={(e) => {
+                const newValue = e.target.value;
+                setEditBuffer(newValue);
+                try {
+                  const match = newValue.match(/=\s*(\{[\s\S]*\})\s*;?\s*$/);
+                  if (!match) {
+                    setParseError('데이터 객체를 찾을 수 없습니다. "export const dashboardData: DashboardData = { ... };" 형식을 확인하세요.');
+                    return;
+                  }
+                  const fn = new Function(`return ${match[1]}`);
+                  fn();
+                  setParseError(null);
+                  isLocalEdit.current = true;
+                  onDataTsChange?.(newValue);
+                } catch (err) {
+                  setParseError(err instanceof Error ? err.message : '코드 파싱에 실패했습니다.');
+                }
+              }}
+              className="w-full h-[600px] font-mono text-sm bg-slate-900 text-green-300 p-4 rounded-lg border border-slate-700 resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"
+              spellCheck={false}
+              placeholder="data.ts 코드를 입력하세요..."
+            />
+            <div className="mt-2 flex items-center justify-between text-xs text-slate-400">
+              <span>TypeScript 코드를 직접 수정할 수 있습니다. 유효한 코드는 자동으로 미리보기에 반영됩니다.</span>
+              <span>{editBuffer.split('\n').length}줄</span>
+            </div>
+          </div>
+        )}
       </div>
     </DashboardErrorBoundary>
   );

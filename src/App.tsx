@@ -253,7 +253,7 @@ function App() {
             {/* Preview Tab */}
             {activeTab === 'preview' && (
               <div className="animate-fade-in">
-                <PreviewFrame dataTs={dataTs} isLoading={isLoading} brand={brand} />
+                <PreviewFrame dataTs={dataTs} isLoading={isLoading} brand={brand} onDataTsChange={setDataTs} />
               </div>
             )}
 
